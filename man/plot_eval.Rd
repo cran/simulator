@@ -2,10 +2,20 @@
 % Please edit documentation in R/plot_eval.R
 \name{plot_eval}
 \alias{plot_eval}
-\title{Make a boxplot of a metric for each method}
+\title{Plot a metric's value for each method}
 \usage{
-plot_eval(object, metric_name, use_ggplot2 = TRUE, main, facet_mains, ylab,
-  ylim, include_zero = FALSE, angle = 0, ...)
+plot_eval(
+  object,
+  metric_name,
+  use_ggplot2 = TRUE,
+  main,
+  facet_mains,
+  ylab,
+  ylim,
+  include_zero = FALSE,
+  angle = 0,
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class \code{\linkS4class{Simulation}},
@@ -36,7 +46,11 @@ is passed explicitly}
 \code{use_ggplot2 = FALSE}).}
 }
 \description{
-If evals is a \code{listofEvals}, then each model will be its own plot.
+When the evaluted metric is scalar-valued, this functions makes a boxplot of
+this metric for each method.  When the metric is vector-valued, this function
+makes a curve with this metric on the y-axis, with one curve for each method
+(the x-axis is the corresponding entry of that metric's vector). If evals is
+a \code{listofEvals}, then each model will be its own plot.
 }
 \examples{
 \dontrun{
@@ -56,4 +70,3 @@ If evals is a \code{listofEvals}, then each model will be its own plot.
 \code{\link{plot_evals}} \code{\link{plot_eval_by}}
 \code{\link{tabulate_eval}}
 }
-

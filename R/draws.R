@@ -52,14 +52,14 @@ NULL
 #'  }
 simulate_from_model <- function(object, nsim,
                                 index = 1, parallel = NULL) {
-  if (class(object) == "Simulation")
+  if (is(object, "Simulation"))
     model_ref <- model(object, reference = TRUE)
   else
     model_ref <- object
-  if (class(model_ref) == "list") {
+  if (is(model_ref, "list")) {
     dref <- lapply(model_ref, simulate_from_model, nsim = nsim, index = index,
            parallel = parallel)
-    if (class(object) == "Simulation")
+    if (is(object, "Simulation"))
       return(invisible(add(object, dref)))
     return(invisible(dref))
   }
@@ -101,7 +101,7 @@ simulate_from_model <- function(object, nsim,
                                libraries = parallel$libraries,
                                save_locally = parallel$save_locally)
   }
-  if (class(object) == "Simulation")
+  if (is(object, "Simulation"))
     return(invisible(add(object, dref)))
   invisible(dref)
 }
@@ -142,9 +142,9 @@ simulate_from_model_single <- function(model, nsim, index, seed) {
   RNGkind("L'Ecuyer-CMRG")
   .Random.seed <<- seed
   args <- setdiff(names(formals(model@simulate)), "nsim")
-  time <- system.time({
-    sims1 <- do.call(model@simulate, c(model@params[args], nsim = nsim))
-  })
+  start_time <- proc.time()
+  sims1 <- do.call(model@simulate, c(model@params[args], nsim = nsim))
+  time <- proc.time() - start_time
   if (length(sims1) != nsim)
     stop("model's simulate function must return list of length nsim.")
   rng <- list(rng_seed = seed, rng_end_seed = .Random.seed)

@@ -1,7 +1,5 @@
 ---
 title: "James-Stein with the Simulator"
-author: "Jacob Bien"
-date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{James-Stein with the Simulator}
@@ -90,7 +88,7 @@ If this document were in latex, we would instead use `output_type="latex"`.  Sin
 
 ```{r, results="asis"}
 tabulate_eval(sim1, metric_name = "sqrerr", output_type = "markdown",
-              format_args = list(nsmall = 1, digits = 0))
+              format_args = list(nsmall = 1, digits = 1))
 ```
 
 ## Demonstration of additional simulator features
@@ -231,3 +229,7 @@ This was relatively close to zero so that when we computed
 ```
 
 we get something quite large.  Of course, when $p=1$, the James-Stein estimator does not perform shrinkage but rather it inflates $Y$, something that no one would expect to be a good idea!  Now that we have investigated these outliers, we are confident that they do not reflect a coding error; rather, they are a "real" portrayal of the performance of the James-Stein estimator's performance in this situation.
+
+```{r, include=FALSE}
+unlink("files", recursive = TRUE)
+```

@@ -4,8 +4,7 @@
 \alias{as.data.frame.listofModels}
 \title{Convert a List of Models to a data.frame}
 \usage{
-\method{as.data.frame}{listofModels}(x, row.names = NULL, optional = FALSE,
-  ...)
+\method{as.data.frame}{listofModels}(x, row.names = NULL, optional = FALSE, ...)
 }
 \arguments{
 \item{x}{list}
@@ -21,4 +20,3 @@ When \code{\link{load}} generates a list of Models, it assigns this
 to be of (S3) class listofModels, inherited from list, so that this function
 will be invoked instead of as.data.frame.list, which is defined in base.
 }
-

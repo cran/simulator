@@ -4,11 +4,19 @@
 \alias{tabulate_eval}
 \title{Make a table of a metric for each pair of models and methods}
 \usage{
-tabulate_eval(object, metric_name, method_names = NULL, caption = NULL,
-  center_aggregator = NULL, spread_aggregator = NULL,
-  se_format = c("Paren", "PlusMinus", "None"), output_type = "latex",
+tabulate_eval(
+  object,
+  metric_name,
+  method_names = NULL,
+  caption = NULL,
+  center_aggregator = NULL,
+  spread_aggregator = NULL,
+  se_format = c("Paren", "PlusMinus", "None"),
+  output_type = "latex",
   format_args = list(nsmall = 0, digits = NULL, scientific = FALSE),
-  na_string = "--")
+  na_string = "--",
+  bold = c("None", "Smallest", "Largest")
+)
 }
 \arguments{
 \item{object}{an object of class \code{\linkS4class{Simulation}},
@@ -20,15 +28,16 @@ Each evals object should just differ by model_name.}
 \item{method_names}{character vector indicating methods to include in table.
 If NULL, then will include all methods found in object's evals.}
 
-\item{caption}{caption of plot}
+\item{caption}{caption of plot. If NULL, then default caption used; if FALSE
+then no caption (and returns tabular without table).}
 
 \item{center_aggregator}{When NULL (which is default), the sample mean
 aggregator is used.  User can write specialized aggregators (see
 definition of class \code{\linkS4class{Aggregator}}) as necessary,
 for example, when the evaluated metric is not scalar-valued.}
 
-\item{spread_aggregator}{When NULL (which is default), the sample mean
-aggregator is used.  User can write specialized aggregators (see
+\item{spread_aggregator}{When NULL (which is default), the standard error 
+of the sample mean is used.  User can write specialized aggregators (see
 definition of class \code{\linkS4class{Aggregator}}) as necessary,
 for example, when the evaluated metric is not scalar-valued. Set
 \code{spread_aggregator} to \code{NA} to hide error bars.}
@@ -41,6 +50,8 @@ Default is "latex" but other options include "html" and "markdown"}
 \item{format_args}{arguments to pass to the function \code{\link{format}}}
 
 \item{na_string}{what to write in table in place of NA}
+
+\item{bold}{puts in bold the value that is smallest/largest for each model}
 }
 \description{
 Each row of the table corresponds to a different model and each column
@@ -67,4 +78,3 @@ including latex, html, markdown, etc.
    tabulate_eval(sim, "myloss")
  }
 }
-

@@ -5,8 +5,15 @@
 \alias{load_evals_from_ref}
 \title{Load one or more Evals objects from file.}
 \usage{
-load_evals(dir, model_name, index, method_names, metric_names = NULL,
-  out_loc = "out", simulator.files = NULL)
+load_evals(
+  dir,
+  model_name,
+  index,
+  method_names,
+  metric_names = NULL,
+  out_loc = "out",
+  simulator.files = NULL
+)
 
 load_evals_from_ref(ref, metric_names = NULL)
 }
@@ -42,4 +49,3 @@ a list of \code{\linkS4class{Evals}} objects will be returned.
 \code{\link{load_model}} \code{\link{load_draws}}
          \code{\link{as.data.frame.Evals}}
 }
-

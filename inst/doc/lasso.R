@@ -1,4 +1,4 @@
-## ----setup, include=FALSE------------------------------------------------
+## ----setup, include=FALSE-----------------------------------------------------
 library(knitr)
 code <- file.path("lasso",
                   c("model_functions.R", 
@@ -8,10 +8,10 @@ code <- file.path("lasso",
 code_lastmodified <- max(file.info(code)$mtime)
 sapply(code, read_chunk)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library(simulator)
 
-## ---- echo = FALSE, results = 'hide', warning = FALSE, message = FALSE----
+## ---- echo = FALSE, results = 'hide', warning = FALSE, message = FALSE--------
 make_sparse_linear_model <- function(n, p, k, snr) {
   x <- matrix(rnorm(n * p), n, p)
   beta <- rep(c(1, 0), c(k, p - k))
@@ -21,8 +21,7 @@ make_sparse_linear_model <- function(n, p, k, snr) {
             params = list(x = x, beta = beta, mu = mu, sigma = sigma, n = n,
                           p = p, k = k),
             simulate = function(mu, sigma, nsim) {
-              y <- mu + sigma * matrix(rnorm(nsim * n), n, nsim)
-              return(split(y, col(y))) # make each col its own list element
+              return(lapply(1:nsim, function(i) mu + sigma * rnorm(n)))
             })
 }
 library(glmnet)
@@ -102,7 +101,7 @@ refit <- new_method_extension(name = "refit", label = "refitted",
                                             df = rep(NA, ncol(beta))))
                               })
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  sim <- new_simulation("bet-on-sparsity", "Bet on sparsity") %>%
 #    generate_model(make_sparse_linear_model, n = 200, p = 500, snr = 2,
 #                   k = as.list(seq(5, 80, by = 5)),
@@ -112,7 +111,7 @@ refit <- new_method_extension(name = "refit", label = "refitted",
 #               parallel = list(socket_names = 2, libraries = "glmnet")) %>%
 #    evaluate(list(sqrerr, nnz, df, best_sqrerr))
 
-## ---- echo = FALSE, results = 'hide', message = FALSE, warning = FALSE----
+## ---- echo = FALSE, results = 'hide', message = FALSE, warning = FALSE--------
 sim_lastmodified <- file.info("files/sim-bet-on-sparsity.Rdata")$mtime
 if (is.na(sim_lastmodified) || code_lastmodified > sim_lastmodified) {
   sim <- new_simulation("bet-on-sparsity", "Bet on sparsity") %>%
@@ -133,7 +132,7 @@ plot_eval_by(sim, "best_sqrerr", varying = "k", main = "Betting on sparsity")
 ## ---- fig.width = 6, fig.height = 4, results = 'hide', warning = FALSE, message = FALSE----
 subset_simulation(sim, k %in% c(20, 80)) %>% plot_evals("df", "sqrerr")
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  sim2 <- sim %>%
 #    subset_simulation(methods = "lasso") %>%
 #    rename("relaxing-the-lasso") %>%
@@ -141,7 +140,7 @@ subset_simulation(sim, k %in% c(20, 80)) %>% plot_evals("df", "sqrerr")
 #    run_method(methods = lasso + refit) %>%
 #    evaluate(list(sqrerr, nnz, df, best_sqrerr))
 
-## ---- echo = FALSE, results = 'hide', message = FALSE, warning = FALSE----
+## ---- echo = FALSE, results = 'hide', message = FALSE, warning = FALSE--------
 sim_lastmodified <- file.info("files/sim-relaxing-the-lasso.Rdata")$mtime
 if (is.na(sim_lastmodified) || code_lastmodified > sim_lastmodified) {
   sim2 <- sim %>%
@@ -157,22 +156,22 @@ if (is.na(sim_lastmodified) || code_lastmodified > sim_lastmodified) {
 ## ---- fig.width = 6, fig.height = 4, results = 'hide', warning = FALSE, message = FALSE----
 plot_eval_by(sim2, "best_sqrerr", varying = "k")
 
-## ---- results='asis'-----------------------------------------------------
+## ---- results='asis'----------------------------------------------------------
 sim2 %>% 
   subset_simulation(methods = c("lasso", "lasso_refit"), subset = 1:3) %>%
   tabulate_eval(metric_name = "best_sqrerr",
-                format_args = list(nsmall = 3, digits = 0),
+                format_args = list(nsmall = 3, digits = 1),
                 output_type = "markdown")
 
 ## ---- fig.width = 8, fig.height = 4, results = 'hide', warning = FALSE, message = FALSE----
 subset_simulation(sim2, methods = c("lasso", "lasso_refit"), subset = 1:3) %>%
   plot_evals("nnz", "sqrerr")
 
-## ---- fig.width = 6, fig.height = 4, results = 'hide', warning = FALSE----
+## ---- fig.width = 6, fig.height = 4, results = 'hide', warning = FALSE--------
 subset_simulation(sim2, methods = c("lasso", "lasso_refit"), k == 40) %>%
   plot_evals("nnz", "sqrerr")
 
-## ---- echo = FALSE, eval = TRUE, results = 'hide'------------------------
+## ---- echo = FALSE, eval = TRUE, results = 'hide'-----------------------------
 #' Make folds for cross validation
 #'
 #' Divides the indices \code{1:n} into \code{nfolds} random folds of about the same size.
@@ -200,12 +199,12 @@ cv <- new_method_extension("cv", "cross validated",
                              for (i in seq_along(ii)) {
                                train <- model
                                train@params$x <- model@params$x[-ii[[i]], ]
-                               train@params$n <- model@params$x[-ii[[i]], ]
+                               train@params$n <- nrow(train@params$x)
                                train_draw <- draw[-ii[[i]]]
 
                                test <- model
                                test@params$x <- model@params$x[ii[[i]], ]
-                               test@params$n <- model@params$x[ii[[i]], ]
+                               test@params$n <- nrow(test@params$x)
                                test_draw <- draw[ii[[i]]]
                                fit <- base_method@method(model = train,
                                                          draw = train_draw,
@@ -224,14 +223,14 @@ cv <- new_method_extension("cv", "cross validated",
                                   yhat = model$x %*% out$beta[, imin])
                            })
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  sim3 <- sim %>% subset_simulation(methods = "") %>%
 #    rename("bet-on-sparsity-cv") %>%
 #    relabel("Bet on sparsity (with cross validation)") %>%
 #    run_method(list(lasso + cv, ridge + cv)) %>%
 #    evaluate(list(sqrerr, nnz))
 
-## ---- echo = FALSE, results = 'hide', message = FALSE, warning = FALSE----
+## ---- echo = FALSE, results = 'hide', message = FALSE, warning = FALSE--------
 sim_lastmodified <- file.info("files/sim-bet-on-sparsity-cv.Rdata")$mtime
 if (is.na(sim_lastmodified) || code_lastmodified > sim_lastmodified) {
   sim3 <- sim %>% subset_simulation(methods = "") %>%
@@ -246,7 +245,7 @@ if (is.na(sim_lastmodified) || code_lastmodified > sim_lastmodified) {
 ## ---- fig.width = 6, fig.height = 4, results = 'hide', warning = FALSE, message = FALSE----
 plot_eval_by(sim3, "sqrerr", varying = "k", main = "Betting on sparsity")
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  make_sparse_linear_model <- function(n, p, k, snr) {
 #    x <- matrix(rnorm(n * p), n, p)
 #    beta <- rep(c(1, 0), c(k, p - k))
@@ -256,12 +255,11 @@ plot_eval_by(sim3, "sqrerr", varying = "k", main = "Betting on sparsity")
 #              params = list(x = x, beta = beta, mu = mu, sigma = sigma, n = n,
 #                            p = p, k = k),
 #              simulate = function(mu, sigma, nsim) {
-#                y <- mu + sigma * matrix(rnorm(nsim * n), n, nsim)
-#                return(split(y, col(y))) # make each col its own list element
+#                return(lapply(1:nsim, function(i) mu + sigma * rnorm(n)))
 #              })
 #  }
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  library(glmnet)
 #  lasso <- new_method("lasso", "Lasso",
 #                      method = function(model, draw, lambda = NULL) {
@@ -301,7 +299,7 @@ plot_eval_by(sim3, "sqrerr", varying = "k", main = "Betting on sparsity")
 #                             lambda = lambda, df = df)
 #                      })
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  sqrerr <- new_metric("sqrerr", "squared error",
 #                    metric = function(model, out) {
 #                      colMeans(as.matrix(out$beta - model$beta)^2)
@@ -320,7 +318,7 @@ plot_eval_by(sim3, "sqrerr", varying = "k", main = "Betting on sparsity")
 #  df <- new_metric("df", "degrees of freedom",
 #                   metric = function(model, out) out$df)
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  refit <- new_method_extension(name = "refit", label = "refitted",
 #                                method_extension = function(model, draw, out,
 #                                                            base_method) {
@@ -343,13 +341,13 @@ plot_eval_by(sim3, "sqrerr", varying = "k", main = "Betting on sparsity")
 #                                              df = rep(NA, ncol(beta))))
 #                                })
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 lasso + refit
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  relaxed_mcp <- mcp + refit
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  #' Make folds for cross validation
 #  #'
 #  #' Divides the indices \code{1:n} into \code{nfolds} random folds of about the same size.
@@ -377,12 +375,12 @@ lasso + refit
 #                               for (i in seq_along(ii)) {
 #                                 train <- model
 #                                 train@params$x <- model@params$x[-ii[[i]], ]
-#                                 train@params$n <- model@params$x[-ii[[i]], ]
+#                                 train@params$n <- nrow(train@params$x)
 #                                 train_draw <- draw[-ii[[i]]]
 #  
 #                                 test <- model
 #                                 test@params$x <- model@params$x[ii[[i]], ]
-#                                 test@params$n <- model@params$x[ii[[i]], ]
+#                                 test@params$n <- nrow(test@params$x)
 #                                 test_draw <- draw[ii[[i]]]
 #                                 fit <- base_method@method(model = train,
 #                                                           draw = train_draw,
@@ -400,4 +398,7 @@ lasso + refit
 #                                    beta = out$beta[, imin],
 #                                    yhat = model$x %*% out$beta[, imin])
 #                             })
+
+## ---- include=FALSE-----------------------------------------------------------
+unlink("files", recursive = TRUE)
 

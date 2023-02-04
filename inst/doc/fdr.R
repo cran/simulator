@@ -1,4 +1,4 @@
-## ----setup, include=FALSE------------------------------------------------
+## ----setup, include=FALSE-----------------------------------------------------
 library(knitr)
 code <- file.path("false-discovery-rate",
                   c("model_functions.R", 
@@ -8,10 +8,10 @@ code <- file.path("false-discovery-rate",
 code_lastmodified <- max(file.info(code)$mtime)
 sapply(code, read_chunk)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library(simulator)
 
-## ---- echo = FALSE, results = 'hide', warning = FALSE, message = FALSE----
+## ---- echo = FALSE, results = 'hide', warning = FALSE, message = FALSE--------
 library(mvtnorm)
 make_correlated_pvalues <- function(n, pi0, rho) {
   # Gaussian copula model...
@@ -62,7 +62,7 @@ nd <- new_metric(name = "nd",
                  label = "number of discoveries",
                  metric = function(model, out) length(out$rejected))
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  name_of_simulation <- "fdr"
 #  sim <- new_simulation(name = name_of_simulation,
 #                        label = "False Discovery Rate") %>%
@@ -75,7 +75,7 @@ nd <- new_metric(name = "nd",
 #    run_method(bh_methods, parallel = list(socket_names = 2)) %>%
 #    evaluate(list(fdp, nd))
 
-## ---- echo = FALSE, results = 'hide', message = FALSE, warning = FALSE----
+## ---- echo = FALSE, results = 'hide', message = FALSE, warning = FALSE--------
 name_of_simulation <- "fdr"
 sim_lastmodified <- file.info(sprintf("files/sim-%s.Rdata",
                               name_of_simulation))$mtime
@@ -97,29 +97,29 @@ if (is.na(sim_lastmodified) || code_lastmodified > sim_lastmodified) {
 }
 sim <- load_simulation(name_of_simulation) %>% subset_simulation(index = 1:4)
 
-## ---- results = 'asis'---------------------------------------------------
+## ---- results = 'asis'--------------------------------------------------------
 sim %>% 
   subset_simulation(rho == 0) %>% 
   tabulate_eval(metric_name = "fdp", output_type = "html", 
-                format_args = list(digits = 0, nsmall = 2))
+                format_args = list(digits = 1, nsmall = 2))
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  sim <- load_simulation("fdr")
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  sim <- sim %>%
 #    simulate_from_model(nsim = 25, index = 5:8) %>%
 #    run_method(bh_methods, parallel = list(socket_names = 2)) %>%
 #    evaluate(list(fdp, nd))
 
-## ---- echo = FALSE, results = 'hide', message = FALSE, warning = FALSE----
+## ---- echo = FALSE, results = 'hide', message = FALSE, warning = FALSE--------
 sim <- load_simulation("fdr") # load the one with index = 1:8
 
-## ---- results = 'asis'---------------------------------------------------
+## ---- results = 'asis'--------------------------------------------------------
 sim %>% 
   subset_simulation(rho == 0) %>% 
   tabulate_eval(metric_name = "fdp", output_type = "html", 
-                format_args = list(digits = 0, nsmall = 2))
+                format_args = list(digits = 1, nsmall = 2))
 
 ## ---- fig.width = 6, fig.height = 4, results = 'hide', warning = FALSE, message = FALSE----
 sim %>% 
@@ -141,7 +141,7 @@ sim %>%
   subset_simulation(pi0 == 1) %>% 
 plot_eval_by(metric_name = "fdp", varying = "rho")
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  sim2 <- subset_simulation(sim, pi0 == 1 & rho == -0.01) %>%
 #    rename("fdr-negdep") %>%
 #    relabel("BH Procedure under negative dependence") %>%
@@ -149,7 +149,7 @@ plot_eval_by(metric_name = "fdp", varying = "rho")
 #    run_method(bh_methods, parallel = list(socket_names = 2)) %>%
 #    evaluate(list(fdp, nd))
 
-## ---- echo = FALSE, results = 'hide', message = FALSE, warning = FALSE----
+## ---- echo = FALSE, results = 'hide', message = FALSE, warning = FALSE--------
 sim_lastmodified <- file.info(sprintf("files/sim-%s.Rdata",
                               "negdep"))$mtime
 if (is.na(sim_lastmodified) || code_lastmodified > sim_lastmodified) {
@@ -163,11 +163,11 @@ if (is.na(sim_lastmodified) || code_lastmodified > sim_lastmodified) {
   sim2 <- load_simulation("negdep")
 }
 
-## ---- results = 'asis'---------------------------------------------------
+## ---- results = 'asis'--------------------------------------------------------
 tabulate_eval(sim2, metric_name = "fdp", output_type = "html", 
-                format_args = list(digits = 0, nsmall = 2))
+                format_args = list(digits = 1, nsmall = 2))
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 m <- model(sim, pi0 == 1 & rho == -0.01)
 m2 <- model(sim2)
 all.equal(m, m2)
@@ -175,7 +175,7 @@ d <- draws(sim, pi0 == 1 & rho == -0.01)
 d2 <- draws(sim2, index = 1:8)
 all.equal(d, d2)
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  library(mvtnorm)
 #  make_correlated_pvalues <- function(n, pi0, rho) {
 #    # Gaussian copula model...
@@ -200,7 +200,7 @@ all.equal(d, d2)
 #              })
 #  }
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  make_bh <- function(q) {
 #    # q is the desired level of control for the FDR
 #    new_method(name = paste0("bh", q),
@@ -217,7 +217,7 @@ all.equal(d, d2)
 #  qvalues <- c(0.05, 0.1, 0.2)
 #  bh_methods <- sapply(qvalues, make_bh)
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  fdp <- new_metric(name = "fdp",
 #                    label = "false discovery proportion",
 #                    metric = function(model, out) {
@@ -230,6 +230,9 @@ all.equal(d, d2)
 #                   label = "number of discoveries",
 #                   metric = function(model, out) length(out$rejected))
 
-## ---- results='asis'-----------------------------------------------------
+## ---- results='asis'----------------------------------------------------------
 citation("simulator")
+
+## ---- include=FALSE-----------------------------------------------------------
+unlink("files", recursive = TRUE)
 

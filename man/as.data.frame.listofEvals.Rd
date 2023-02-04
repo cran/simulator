@@ -4,8 +4,7 @@
 \alias{as.data.frame.listofEvals}
 \title{Convert a list of Evals to a data.frame}
 \usage{
-\method{as.data.frame}{listofEvals}(x, row.names = NULL, optional = FALSE,
-  ...)
+\method{as.data.frame}{listofEvals}(x, row.names = NULL, optional = FALSE, ...)
 }
 \arguments{
 \item{x}{a listofEvals object}
@@ -21,4 +20,3 @@ When \code{\link{load}} generates a list of Evals, it assigns this
 to be of (S3) class listofEvals, inherited from list, so that this function
 will be invoked instead of as.data.frame.list, which is defined in base.
 }
-

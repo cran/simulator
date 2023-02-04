@@ -1,11 +1,15 @@
 
 #' Plot one metric versus another for each method
 #'
+#' This function is used when both evaluated metrics are vector-valued, so a
+#' curve is plotted, parametrized by the two metrics.  To plot a single metric
+#' that is vector-valued, pass NULL for metric_name_x. This behaves similarly
+#' to \code{plot(runif(5))}, in which the x-axis variable is simply \code{1:5}.
 #' If evals is a \code{listofEvals}, then each model will be its own plot.
 #'
 #' @param object an object of class \code{\linkS4class{Simulation}},
 #'        \code{\linkS4class{Evals}}, or \code{listofEvals}
-#' @param metric_name_x the name of metric to plot on x axis
+#' @param metric_name_x the name of metric to plot on x axis (or NULL)
 #' @param metric_name_y the name of metric to plot on y axis
 #' @param use_ggplot2 whether to use \code{ggplot2} (requires installation
 #'        of \code{ggplot2})
@@ -38,14 +42,30 @@ plot_evals <- function(object, metric_name_x, metric_name_y, use_ggplot2 = TRUE,
                        method_lwd = rep(1, num_methods),
                        method_pch = rep(NA, num_methods), ...) {
   ev_list <- get_evals_list(object)
+  if (!any(unlist(lapply(ev_list,
+                         function(e) metric_name_y %in% e@metric_name)))) {
+    stop("Passed object does not have Evals named ", metric_name_y)
+  }
+  if (is.null(metric_name_x)) {
+    # add a "pseudo" eval for the x-axis like how graphics::plot puts "Index"
+    metric_name_x <- options("simulator.plot_evals.index.name")[[1]]
+    lab <- options("simulator.plot_evals.index.label")[[1]]
+    for (m in seq_along(ev_list)) {
+      ev_list[[m]]@metric_name <- c(ev_list[[m]]@metric_name, metric_name_x)
+      ev_list[[m]]@metric_label <- c(ev_list[[m]]@metric_label, lab)
+      for(meth in names(ev_list[[m]]@evals)) {
+        for (rid in names(ev_list[[m]]@evals[[meth]])) {
+          # the length of this pseudo eval should match that to be on y-axis
+          len <- length(ev_list[[m]]@evals[[meth]][[rid]][[metric_name_y]])
+          ev_list[[m]]@evals[[meth]][[rid]][[metric_name_x]] <- seq(len)
+        }
+      }
+    }
+  }
   if (length(ev_list) == 0) stop("Passed object does not have Evals to plot.")
   if (!any(unlist(lapply(ev_list,
                          function(e) metric_name_x %in% e@metric_name)))) {
     stop("Passed object does not have Evals named ", metric_name_x)
-  }
-  if (!any(unlist(lapply(ev_list,
-                         function(e) metric_name_y %in% e@metric_name)))) {
-    stop("Passed object does not have Evals named ", metric_name_y)
   }
   method_names <- lapply(ev_list, function(e) e@method_name)
   if (length(unique(method_names)) != 1)
@@ -77,7 +97,8 @@ plot_evals <- function(object, metric_name_x, metric_name_y, use_ggplot2 = TRUE,
                                        main = main, facet_mains = facet_mains,
                                        xlab = xlab, ylab = ylab,
                                        xlim = xlim, ylim = ylim,
-                                       nrow = nrow, ncol = ncol))
+                                       nrow = nrow, ncol = ncol,
+                                       legend_location = legend_location))
   stopifnot(length(method_col) == num_methods)
   stopifnot(length(method_lty) %in% c(1, num_methods))
   if (length(method_lty) == 1) method_lty <- rep(method_lty, num_methods)
@@ -85,7 +106,8 @@ plot_evals <- function(object, metric_name_x, metric_name_y, use_ggplot2 = TRUE,
   if (length(method_lwd) == 1) method_lwd <- rep(method_lwd, num_methods)
   stopifnot(length(method_pch) == num_methods)
 
-  par(mfrow = c(nrow, ncol))
+  if (nrow != 1 | ncol != 1)
+    par(mfrow = c(nrow, ncol))
   palette(options("simulator.color_palette")[[1]])
   for (i in seq_along(ev_list)) {
     ev_df <- as.data.frame(ev_list[[i]])
@@ -94,6 +116,12 @@ plot_evals <- function(object, metric_name_x, metric_name_y, use_ggplot2 = TRUE,
     for (r in unique(ev_df[["Draw"]])) {
       for (m in seq_along(method_names[[1]])) {
         ii <- ev_df[["Method"]] == method_names[[1]][m] & ev_df[["Draw"]] == r
+        if (sum(ii) == 1 & is.na(method_pch[m])) {
+          # there's only a single point, so a line won't show... so override
+          # the choice of NA so this method's evals will be visible
+          method_pch[m] <- 1
+          method_lwd[m] <- NA
+        }
         points(ev_df[ii, metric_name_x], ev_df[ii, metric_name_y],
                col = method_col[m], lty = method_lty[m],
                lwd = method_lwd[m], pch = method_pch[m], type = "o")
@@ -113,39 +141,51 @@ plot_evals <- function(object, metric_name_x, metric_name_y, use_ggplot2 = TRUE,
 
 ggplot_evals <- function(ev_df, metric_name_x, metric_name_y, method_labels,
                          main, facet_mains, xlab, ylab, xlim, ylim,
-                         nrow, ncol) {
+                         nrow, ncol, legend_location) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("To use this function, ggplot2 must be installed.", call. = FALSE)
   }
   if (missing(main)) main <- NULL
   if (length(unique(ev_df$Model)) == 1) {
-    return(ggplot2::ggplot(ev_df, ggplot2::aes_string(metric_name_x,
-                                                         metric_name_y)) +
-             ggplot2::geom_line(ggplot2::aes_string(color = "Method",
-                                         group = "interaction(Method,Draw)")) +
-             ggplot2::labs(x = xlab, y = ylab, title = main) +
-             ggplot2::scale_colour_discrete(labels = method_labels) +
-             ggplot2::ylim(ylim) +
-             ggplot2::xlim(xlim))
+    g <- ggplot2::ggplot(ev_df,
+                         ggplot2::aes_string(metric_name_x, metric_name_y)) +
+      ggplot2::geom_line(ggplot2::aes_string(
+        color = "Method",
+        group = "interaction(Method,Draw)")) +
+      ggplot2::geom_point(ggplot2::aes_string(
+        color = "Method",
+        group = "interaction(Method,Draw)")) +
+      ggplot2::labs(x = xlab, y = ylab, title = main) +
+      ggplot2::scale_colour_discrete(labels = method_labels) +
+      ggplot2::ylim(ylim) +
+      ggplot2::xlim(xlim)
+    if (is.null(legend_location))
+      g <- g + ggplot2::theme(legend.position = "none")
+    return(g)
   }
   # display multiple facets...
   levels(ev_df[["Model"]]) <- facet_mains
-  ggplot2::ggplot(ev_df, ggplot2::aes_string(metric_name_x, metric_name_y)) +
-    ggplot2::geom_line(ggplot2::aes_string(color = "Method",
-                                        group = "interaction(Method,Draw)")) +
+  g <- ggplot2::ggplot(ev_df,
+                       ggplot2::aes_string(metric_name_x, metric_name_y)) +
+    ggplot2::geom_line(ggplot2::aes_string(
+      color = "Method",
+      group = "interaction(Method,Draw)")) +
     ggplot2::labs(x = xlab, y = ylab, title = main) +
     ggplot2::scale_colour_discrete(labels = method_labels) +
     ggplot2::ylim(ylim) +
     ggplot2::xlim(xlim) +
     ggplot2::facet_wrap("Model", nrow = nrow, ncol = ncol)
+  if (is.null(legend_location))
+    g <- g + ggplot2::theme(legend.position = "none")
+  return(g)
 }
 
 get_evals_list <- function(object) {
   # object can be an Evals, list of Evals, listofEvals, or Simulation
   if (isS4(object)) {
-    if (class(object) == "Simulation") {
+    if (is(object, "Simulation")) {
       ev <- evals(object)
-    } else if (class(object) == "Evals")
+    } else if (is(object, "Evals"))
       ev <- object
     else stop("Invalid class for 'object'.")
     if ("Evals" %in% class(ev)) {
@@ -158,7 +198,7 @@ get_evals_list <- function(object) {
     if (all(class(object) == c("listofEvals", "list")))
       return(object)
   if (length(class(object)) == 1) {
-    if (class(object) == "list")
+    if (is(object, "list"))
       class(object) <- c("listofEvals", "list")
       return(object)
   }

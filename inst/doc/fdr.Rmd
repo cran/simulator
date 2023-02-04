@@ -1,7 +1,5 @@
 ---
 title: "Benjamini-Hochberg Procedure with the Simulator"
-author: "Jacob Bien"
-date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Benjamini-Hochberg Procedure with the Simulator}
@@ -27,7 +25,7 @@ $$
 \mathbb{P}_{H_i}(\hat p_i\le \alpha) = \alpha.
 $$
 
-[Benjamini and Hochberg (1995)](http://www.jstor.org/stable/2346101) design a procedure (for when these p-values are independent) that controls what they call the *false discovery rate* (FDR), which is the expected proportion of the rejected tests that should not have been rejected:
+[Benjamini and Hochberg (1995)](https://rss.onlinelibrary.wiley.com/doi/10.1111/j.2517-6161.1995.tb02031.x) design a procedure (for when these p-values are independent) that controls what they call the *false discovery rate* (FDR), which is the expected proportion of the rejected tests that should not have been rejected:
 
 $$
 \mathbb{E}_{\{H_i:i\in S\}}\left[\frac{\sum_{i\in S}1\{H_i\text{ rejected}\}}{\max[1,\sum_{i=1}^n1\{H_i\text{ rejected}\}]}\right].
@@ -78,7 +76,7 @@ We begin by looking at the results when $\rho=0$ (i.e., independent tests).
 sim %>% 
   subset_simulation(rho == 0) %>% 
   tabulate_eval(metric_name = "fdp", output_type = "html", 
-                format_args = list(digits = 0, nsmall = 2))
+                format_args = list(digits = 1, nsmall = 2))
 ```
 
 It appears that the BH procedure does control the FDR at each stated $q$ value.  However, we also see that when $\pi_0$ is less than 1, it tends to be more conservative.  Indeed, Benjamini and Hochberg show that the FDR of BH does not exceed $\pi_0q$.
@@ -113,7 +111,7 @@ We can look again at the table.
 sim %>% 
   subset_simulation(rho == 0) %>% 
   tabulate_eval(metric_name = "fdp", output_type = "html", 
-                format_args = list(digits = 0, nsmall = 2))
+                format_args = list(digits = 1, nsmall = 2))
 ```
 
 
@@ -176,7 +174,7 @@ We remake the table (on the basis of 500 random draws) to check for anti-conserv
 
 ```{r, results = 'asis'}
 tabulate_eval(sim2, metric_name = "fdp", output_type = "html", 
-                format_args = list(digits = 0, nsmall = 2))
+                format_args = list(digits = 1, nsmall = 2))
 ```
 
 Observe that at this point, `sim` and `sim2` are two separate simulation objects that refer to some common simulation results.  For example, their `Model` and `Draws` objects are the same.
@@ -220,3 +218,8 @@ To cite the `simulator`, please use
 ```{r, results='asis'}
 citation("simulator")
 ```
+
+```{r, include=FALSE}
+unlink("files", recursive = TRUE)
+```
+

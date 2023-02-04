@@ -1,6 +1,19 @@
 
 #' Get the contents of a simulator directory
 #'
+#' This function gives detailed information about what is being stored in the
+#' "files" directory.  In particular, it gives the complete paths for all the
+#' draws, outputs, and evals files.  This can be useful in situations in which
+#' the draws or outputs files are no longer needed and take up a lot of memory.
+#' In such a case a user could delete these files with a command such as
+#' \code{system(paste(c("rm", contents$out_files), collapse = " "))}.
+#' That said, one must be cautious in deleting these files since the
+#' simulator generally assumes that earlier stages' files will be available
+#' and so deleting these may cause errors.  However, if one is essentially
+#' finished with a simulation and evaluated metrics have been computed and if
+#' the methods' raw outputs are taking up a lot of disk space, then one might
+#' consider deleting the out_files (and/or the draws_files).
+#'
 #' @param dir name of the directory where directory named "files" exists
 #' @param out_loc a length-1 character vector that gives location
 #'        (relative to model's path) that method outputs are stored.This can be
@@ -16,6 +29,19 @@ get_contents <- function(dir = ".", out_loc = "out") {
   dir_name <- dirname(files)
   file_name <- basename(files)
 
+  # make order of index files 1, 2, 3, ..., 10 rather than 1, 10, ..., 2
+  r <- regexec("^r([[:digit:]]*)(_?.*).Rdata$", file_name)
+  matches <- regmatches(file_name, r)
+  imatches <- which(unlist(lapply(matches, length)) == 3)
+  matches <- matches[imatches]
+  matches <- matrix(unlist(matches), nrow = 3)[2:3, ]
+  new_names <- sprintf("r%08d%s.Rdata", # pad index with zeros temporarily
+                       as.numeric(matches[1, ]), matches[2, ])
+  ord <- order(new_names)
+  file_name[imatches] <- file_name[imatches][ord]
+  files[imatches] <- files[imatches][ord]
+  dir_name[imatches] <- dir_name[imatches][ord]
+
   # find simulation files
   sim_files <- which(dir_name == ".")
   sim_names <- gsub("^sim-(.*).Rdata$", "\\1", files[sim_files])
@@ -29,10 +55,11 @@ get_contents <- function(dir = ".", out_loc = "out") {
   objects <- lapply(model_names, function(m) {
     ii <- setdiff(which(dir_name == m), model_files)
     index <- gsub("^r([[:digit:]]*).Rdata$", "\\1", file_name[ii])
-    return(list(draws = as.numeric(index)))
+    return(list(draws = as.numeric(index),
+                draws_files = files[ii]))
     })
   names(objects) <- model_names
-
+  draws_files <- unlist(lapply(objects, function(obj) obj$draws_files))
   # find output/eval files
   out_and_evals_files <- grep(paste0(out_loc, "$"), dir_name)
   evals_files <- out_and_evals_files[grep("_evals.Rdata",
@@ -50,7 +77,10 @@ get_contents <- function(dir = ".", out_loc = "out") {
     }
   }
   return(list(sim_names = sim_names, mem = mem, objects = objects,
-              nfiles = length(files)))
+              nfiles = length(files),
+              draws_files = file.path(path, draws_files),
+              out_files = file.path(path, files[out_files]),
+              evals_files = file.path(path, files[evals_files])))
 }
 
 

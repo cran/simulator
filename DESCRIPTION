@@ -1,21 +1,20 @@
 Package: simulator
 Title: An Engine for Running Simulations
-Version: 0.2.0
-Date: 2016-07-11
-Authors@R: person("Jacob", "Bien", email = "jbien@cornell.edu", role = c("aut", "cre"))
+Version: 0.2.5
+Date: 2023-02-02
+Authors@R: person("Jacob", "Bien", email = "jbien@usc.edu", role = c("aut", "cre"))
 Description: A framework for performing simulations such as those common in
     methodological statistics papers.  The design principles of this package
     are described in greater depth in Bien, J. (2016) "The simulator: An Engine
-    to Streamline Simulations," which is available at
-    <http://faculty.bscb.cornell.edu/~bien/simulator.pdf>.
-Depends: R (>= 3.2.0)
+    to Streamline Simulations," which is available at <arXiv:1607.00021>.
+Depends: R (>= 3.5.0)
 Imports: methods, graphics, grDevices, stats, utils, magrittr
 Suggests: digest, ggplot2, knitr, rmarkdown, testthat, glmnet, mvtnorm
 License: GPL-3
-LazyData: true
 VignetteBuilder: knitr
-URL: http://github.com/jacobbien/simulator
-BugReports: http://github.com/jacobbien/simulator/issues
+URL: https://github.com/jacobbien/simulator
+BugReports: https://github.com/jacobbien/simulator/issues
+Encoding: UTF-8
 Collate: 'evals-class.R' 'output-class.R' 'component-class.R'
         'model-class.R' 'draws-class.R' 'reference-classes.R'
         'simulation-class.R' 'add-to-simulation.R' 'aggregator-class.R'
@@ -26,10 +25,10 @@ Collate: 'evals-class.R' 'output-class.R' 'component-class.R'
         'parallel-draws.R' 'parallel-methods.R' 'parallel.R'
         'plot_eval.R' 'plot_eval_by.R' 'plot_evals.R' 'tables.R'
         'zzz.R'
-RoxygenNote: 5.0.1
+RoxygenNote: 7.2.3
 NeedsCompilation: no
-Packaged: 2016-07-12 05:25:30 UTC; jbien
+Packaged: 2023-02-02 16:33:59 UTC; jacobbien
 Author: Jacob Bien [aut, cre]
-Maintainer: Jacob Bien <jbien@cornell.edu>
+Maintainer: Jacob Bien <jbien@usc.edu>
 Repository: CRAN
-Date/Publication: 2016-07-12 10:55:18
+Date/Publication: 2023-02-04 07:50:02 UTC

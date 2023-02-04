@@ -4,7 +4,9 @@
 \name{my_example_method}
 \alias{my_example_method}
 \title{My Example Method}
-\format{An object of class \code{Method} of length 1.}
+\format{
+An object of class \code{Method} of length 1.
+}
 \usage{
 my_example_method
 }
@@ -16,4 +18,3 @@ the sample mean of the data.
 \code{\link{make_my_example_model}} \code{\link{my_example_loss}}
 }
 \keyword{datasets}
-
